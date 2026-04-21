@@ -1,4 +1,5 @@
 const std = @import("std");
+const Io = std.Io;
 
 pub const GlobOptions = struct {
     root: std.Build.LazyPath,
@@ -11,13 +12,16 @@ pub const GlobOptions = struct {
 ///Import tons of c files at once!
 pub fn glob(b: *std.Build, options: GlobOptions) !std.Build.Module.AddCSourceFilesOptions {
     var sources: std.ArrayList([]const u8) = .empty;
+    const io = b.graph.io;
 
-    var dir = try std.fs.cwd().openDir(options.root.getPath(b), .{ .iterate = true });
-    defer dir.close();
+    var dir = try Io.Dir.cwd().openDir(io, options.root.getPath(b), .{ .iterate = true });
+
+    defer dir.close(io);
+
     if (options.recursive) {
         var walker = try dir.walk(b.allocator);
-        while (try walker.next()) |entry| {
-            const ext = std.fs.path.extension(entry.basename);
+        while (try walker.next(io)) |entry| {
+            const ext = Io.Dir.path.extension(entry.basename);
             const include_file = for (options.allowed_exts) |e| {
                 if (std.mem.eql(u8, ext, e)) break true;
             } else false;
@@ -27,8 +31,8 @@ pub fn glob(b: *std.Build, options: GlobOptions) !std.Build.Module.AddCSourceFil
         }
     } else {
         var iterator = dir.iterate();
-        while (try iterator.next()) |entry| {
-            const ext = std.fs.path.extension(entry.name);
+        while (try iterator.next(io)) |entry| {
+            const ext = Io.Dir.path.extension(entry.name);
             const include_file = for (options.allowed_exts) |e| {
                 if (std.mem.eql(u8, ext, e)) break true;
             } else false;

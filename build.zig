@@ -346,13 +346,13 @@ pub fn build(b: *std.Build) !void {
         // const opengl_headers = b.lazyDependency("mesa", .{}).?.path("include");
         // path_fiddle.root_module.addIncludePath(opengl_headers);
     }
-    path_fiddle.linkLibrary(rive_renderer_lib);
-    path_fiddle.linkLibrary(rive_lib);
+    path_fiddle.root_module.linkLibrary(rive_renderer_lib);
+    path_fiddle.root_module.linkLibrary(rive_lib);
 
     path_fiddle.step.dependOn(&rive_renderer_lib.step);
-    path_fiddle.linkLibrary(glfw_lib);
+    path_fiddle.root_module.linkLibrary(glfw_lib);
 
-    path_fiddle.addSystemIncludePath(linuxDeps.path("include"));
+    path_fiddle.root_module.addSystemIncludePath(linuxDeps.path("include"));
 
     //
     // if (target.query.isNative()) {
@@ -362,7 +362,7 @@ pub fn build(b: *std.Build) !void {
     // }
 
     if (system_framework_path) |path| {
-        path_fiddle.addSystemFrameworkPath(path);
+        path_fiddle.root_module.addSystemFrameworkPath(path);
     }
 
     path_fiddle.root_module.addCMacro("RIVE_DESKTOP_GL", "");

@@ -12,7 +12,7 @@ pub fn build(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
         }),
     });
 
-    sheenbidi.addCSourceFiles(.{ .files = &.{
+    sheenbidi.root_module.addCSourceFiles(.{ .files = &.{
         "BidiChain.c",
         "BidiTypeLookup.c",
         "BracketQueue.c",
