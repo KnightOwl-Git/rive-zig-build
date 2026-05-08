@@ -1,0 +1,66 @@
+name: Tests
+
+on:
+  push:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        platform: [linux]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install
+        run: |
+          wget -q https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-linux.tar.gz
+          tar -xf premake-5.0.0-beta2-linux.tar.gz
+          sudo chmod a+x premake5
+          sudo mv premake5 /usr/local/bin
+
+      - name: Install C++ dependencies
+        run: sudo apt update && sudo apt-get -y install build-essential clang libclang-rt-dev g++ llvm-dev uuid-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev freeglut3-dev zlib1g-dev
+
+      - name: Tests
+        run: |
+          cd tests/unit_tests
+          ./test.sh
+
+  build-windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v2
+      - name: Tests
+        run: |
+          cd tests/unit_tests
+          ./test.sh
+
+  build-macos:
+    runs-on: macOS-latest
+
+    strategy:
+      matrix:
+        platform: [macOS]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install
+        run: |
+          wget -q https://github.com/premake/premake-core/releases/download/v5.0.0-beta2/premake-5.0.0-beta2-macosx.tar.gz
+          tar -xf premake-5.0.0-beta2-macosx.tar.gz
+          sudo chmod a+x premake5
+          sudo mv premake5 /usr/local/bin
+
+      - name: Build glfw
+        working-directory: skia/dependencies/
+        run: ./make_glfw.sh
+
+      - name: Tests
+        if: matrix.platform == 'macOS'
+        run: |
+          echo Testing for ${{matrix.platform}}
+          cd tests/unit_tests
+          ./test.sh

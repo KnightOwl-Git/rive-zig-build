@@ -1,0 +1,53 @@
+{
+  "name": "ScriptAsset",
+  "key": {
+    "int": 529,
+    "string": "scriptasset"
+  },
+  "extends": "assets/text_asset.json",
+  "properties": {
+    "generatorFunctionRef": {
+      "type": "uint",
+      "initialValue": "0",
+      "key": {
+        "int": 893,
+        "string": "generatorfunctionref"
+      },
+      "description": "The ref of the generator function (the function returned by the compiled code).",
+      "coop": false,
+      "exportsToRuntimeConditionally": true,
+      "journal": false
+    },
+    "isModule": {
+      "type": "bool",
+      "initialValue": "false",
+      "key": {
+        "int": 914,
+        "string": "ismodule"
+      },
+      "description": "Whether the script is a module (doesn't implement a protocol like Node, Layout, etc."
+    },
+    "dependencyIds": {
+      "type": "List<Id>",
+      "initialValue": "[]",
+      "key": {
+        "int": 927,
+        "string": "dependencyids"
+      },
+      "description": "Ids of any scripts this script DIRECTLY requires (not dependencies of dependencies) in its core",
+      "runtime": false,
+      "journal": false
+    },
+    "compilationOrder": {
+      "type": "uint",
+      "initialValue": "0",
+      "key": {
+        "int": 938,
+        "string": "compilationorder"
+      },
+      "description": "Topological order from compilation — scripts with lower values are depended on by scripts with higher values. Not exported to runtime; the order is inherent in the position the ScriptAsset is written into the .riv.",
+      "runtime": false,
+      "journal": false
+    }
+  }
+}

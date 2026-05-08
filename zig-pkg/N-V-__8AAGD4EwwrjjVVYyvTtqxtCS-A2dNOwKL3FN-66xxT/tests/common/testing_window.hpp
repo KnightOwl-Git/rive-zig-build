@@ -1,0 +1,296 @@
+/*
+ * Copyright 2022 Rive
+ */
+
+#ifndef TESTING_WINDOW_HPP
+#define TESTING_WINDOW_HPP
+
+#include "common/offscreen_render_target.hpp"
+#include "rive/renderer/gpu.hpp"
+#include "rive/renderer/shader_compilation_mode.hpp"
+#include "rive/refcnt.hpp"
+#include <memory>
+#include <vector>
+#include <string>
+
+namespace rive
+{
+class Renderer;
+class Factory;
+namespace gpu
+{
+class RenderContext;
+class RenderContextGLImpl;
+class RenderTarget;
+class Texture;
+class TextureRenderTarget;
+} // namespace gpu
+}; // namespace rive
+
+// Wraps a factory for rive::Renderer and a singleton target for it to render
+// into (GL window, HTML canvas, software buffer, etc.):
+//
+//   TestingWindow::Init(type);
+//   renderer = TestingWindow::Get()->reset(width, height);
+//   ...
+//
+
+class TestingWindow
+{
+public:
+    enum class Backend
+    {
+        gl,
+        d3d,
+        d3d12,
+        metal,
+        vk,
+
+        // Vulkan on Metal, aka MoltenVK.
+        // (defaults to /usr/local/share/vulkan/icd.d/MoltenVK_icd.json if
+        // VK_ICD_FILENAMES is not set.)
+        moltenvk,
+
+        // Swiftshader, Google's CPU implementation of Vulkan.
+        // (defaults to ./vk_swiftshader_icd.json if VK_ICD_FILENAMES is not
+        // set.)
+        swiftshader,
+
+        angle,
+        dawn,
+        wgpu,
+        rhi,
+        external,
+        coregraphics,
+        skia,
+        null,
+    };
+
+    enum class ANGLERenderer
+    {
+        metal,
+        d3d11,
+        vk,
+        gles,
+        gl,
+    };
+
+    struct BackendParams
+    {
+        bool atomic = false;
+        bool core = false;
+        bool msaa = false;
+        bool srgb = false;
+        bool clockwise = false;
+        bool disableValidationLayers = false;
+        bool disableDebugCallbacks = false;
+        bool wantVulkanSynchronizationValidation = false;
+
+        rive::gpu::ShaderCompilationMode shaderCompilationMode =
+            rive::gpu::ShaderCompilationMode::standard;
+
+        ANGLERenderer angleRenderer =
+#ifdef __APPLE__
+            ANGLERenderer::metal;
+#elif defined(_WIN32)
+            ANGLERenderer::d3d11;
+#else
+            ANGLERenderer::vk;
+#endif
+        std::string gpuNameFilter;
+    };
+
+    enum class Visibility
+    {
+        headless,
+        window,
+        fullscreen,
+    };
+
+    enum class InputEvent
+    {
+        KeyPress,
+        MouseDown,
+        MouseUp,
+        MouseMove
+    };
+
+    // Aligns with GLFW's mouse button enum
+    enum MouseButton : int
+    {
+        Left,
+        Right,
+        Middle,
+        // can support more buttons
+    };
+
+    struct InputEventData
+    {
+        InputEventData() : InputEventData(InputEvent::KeyPress, '\0') {}
+
+        InputEventData(InputEvent type, float posX, float posY) :
+            eventType(type)
+        {
+            metadata = {.posX = posX, .posY = posY};
+        }
+
+        InputEventData(InputEvent type, char c) : eventType(type)
+        {
+            metadata = {.key = c};
+        }
+
+        InputEvent eventType;
+
+        union
+        {
+            struct
+            {
+                // Move & down/up mouse press events all have coords
+                float posX;
+                float posY;
+            };
+
+            char key;
+        } metadata;
+    };
+
+    static const char* BackendName(Backend);
+
+    static Backend ParseBackend(const char* name, BackendParams*);
+    static TestingWindow* Init(Backend,
+                               const BackendParams&,
+                               Visibility,
+                               void* platformWindow = nullptr);
+    static TestingWindow* Get();
+    static void Set(TestingWindow* inWindow);
+    static void Destroy();
+    static Backend backend() { return s_Backend; }
+
+    uint32_t width() const { return m_width; }
+    uint32_t height() const { return m_height; }
+
+    virtual rive::Factory* factory() = 0;
+    virtual void resize(int width, int height)
+    {
+        m_width = width;
+        m_height = height;
+    }
+
+    // This is called by the gm testing after each GM runs
+    virtual void onceAfterGM() {}
+
+    struct FrameOptions
+    {
+        const char* name;
+        uint32_t clearColor;
+        bool doClear = true;
+        bool forceMSAA = false;
+        bool disableRasterOrdering = false;
+        bool wireframe = false;
+        bool fillsDisabled = false;
+        bool strokesDisabled = false;
+        bool clockwiseFillOverride = false;
+#ifdef WITH_RIVE_TOOLS
+        rive::gpu::SynthesizedFailureType synthesizedFailureType =
+            rive::gpu::SynthesizedFailureType::none;
+#endif
+    };
+    virtual std::unique_ptr<rive::Renderer> beginFrame(const FrameOptions&) = 0;
+    virtual void endFrame(std::vector<uint8_t>* pixelData = nullptr) = 0;
+
+    // For testing directly on RenderContext.
+    virtual rive::gpu::RenderContext* renderContext() const { return nullptr; }
+    virtual rive::gpu::RenderContextGLImpl* renderContextGLImpl() const
+    {
+        return nullptr;
+    }
+    virtual rive::gpu::RenderTarget* renderTarget() const { return nullptr; }
+
+    // Creates a new render target, for testing offscreen rendering.
+    // If riveRenderable is false, the texture will lack features required by
+    // Rive for rendering directly to it (e.g., input attachment, UAV, etc.),
+    // which will exercise indirect rendering fallbacks.
+    virtual rive::rcp<rive_tests::OffscreenRenderTarget>
+    makeOffscreenRenderTarget(uint32_t width,
+                              uint32_t height,
+                              bool riveRenderable) const
+    {
+        return nullptr;
+    }
+
+    // For testing render pass breaks. Caller must call
+    // renderContext()->beginFrame() again.
+    virtual void flushPLSContext(
+        rive::gpu::RenderTarget* offscreenRenderTarget = nullptr)
+    {}
+
+    virtual bool consumeInputEvent(InputEventData& eventData) { return false; }
+    virtual InputEventData waitForInputEvent()
+    {
+        fprintf(stderr, "TestingWindow::waitForInputEvent not implemented.");
+        abort();
+    }
+
+    virtual bool shouldQuit() const { return false; }
+
+    virtual void hotloadShaders() {}
+
+#if defined(__APPLE__) && !defined(RIVE_UNREAL)
+    // Returns the Metal command queue as void* to avoid <Metal/Metal.h> in
+    // this cross-platform header (same pattern as externalCommandBuffer).
+    virtual void* metalQueue() const { return nullptr; }
+#endif
+
+#ifdef RIVE_VULKAN
+    // Vulkan accessors for ORE VK backend initialization in GMs.
+    virtual void* vulkanGraphicsQueue() const { return nullptr; }
+    virtual uint32_t vulkanGraphicsQueueFamilyIndex() const { return 0; }
+    virtual void* vulkanGetInstanceProcAddr() const { return nullptr; }
+    // Returns the host's currently-recording VkCommandBuffer (as void*) so
+    // Ore can record into it via ore::ContextVulkan::beginFrame(externalCb).
+    // Returns nullptr on non-Vulkan harnesses or when no CB is open.
+    virtual void* vulkanCurrentCommandBuffer() const { return nullptr; }
+#endif
+
+    // Returns the host's currently-recording ID3D12GraphicsCommandList (as
+    // void*) so Ore can record into it via
+    // ore::ContextD3D12::beginFrame(externalCl). Returns nullptr on non-D3D12
+    // harnesses or when no CL is open. Typed as void* to avoid leaking d3d12.h
+    // into this cross-platform header.
+    virtual void* d3d12CurrentCommandList() const { return nullptr; }
+
+    // Returns the host's currently-recording wgpu::CommandEncoder (as a raw
+    // WGPUCommandEncoder handle, i.e. void*) so Ore can record into it via
+    // ore::ContextWGPU::beginFrame(externalEncoder). Returns nullptr on
+    // non-WGPU harnesses or when no encoder is open. Typed as void* to keep
+    // WebGPU headers out of this cross-platform header.
+    virtual void* wgpuCurrentCommandEncoder() const { return nullptr; }
+
+    virtual ~TestingWindow() {}
+
+    static TestingWindow* MakeEGL(Backend,
+                                  const BackendParams&,
+                                  void* platformWindow);
+#if defined(__APPLE__) && !defined(RIVE_UNREAL)
+    static TestingWindow* MakeMetalTexture(const BackendParams&);
+#endif
+    static TestingWindow* MakeCoreGraphics();
+    static TestingWindow* MakeFiddleContext(Backend,
+                                            const BackendParams&,
+                                            Visibility,
+                                            void* platformWindow);
+    static TestingWindow* MakeVulkanTexture(const BackendParams&);
+    static TestingWindow* MakeAndroidVulkan(const BackendParams&,
+                                            void* platformWindow);
+    static TestingWindow* MakeWGPU(const BackendParams&);
+    static TestingWindow* MakeSkia();
+    static TestingWindow* MakeNULL();
+
+protected:
+    uint32_t m_width = 0;
+    uint32_t m_height = 0;
+
+    static Backend s_Backend;
+};
+
+#endif
