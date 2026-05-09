@@ -12,7 +12,7 @@ const sheenbidi = @import("src/sheenbidi.zig");
 const harfbuzz = @import("src/harfbuzz.zig");
 const luau = @import("src/luau.zig");
 // const libpng = @import("src/libpng.zig");
-// const libjpeg = @import("src/libjpeg.zig");
+const libjpeg = @import("src/libjpeg.zig");
 const libwebp = @import("src/libwebp.zig");
 
 pub const rive_options = &.{
@@ -173,11 +173,12 @@ pub fn build(b: *std.Build) !void {
     rive_renderer_mod.addIncludePath(upstream.path("decoders/include"));
 
     // if (linux) {
-    const libjpeg = b.dependency("libjpeg", .{});
-    rive_renderer_mod.linkLibrary(libjpeg.artifact("jpeg"));
+    // const libjpeg = b.dependency("libjpeg", .{});
+    // rive_renderer_mod.linkLibrary(libjpeg.artifact("jpeg"));
     const libpng = b.dependency("libpng", .{});
     rive_renderer_mod.linkLibrary(libpng.artifact("png"));
     libwebp.build(b, target, optimize, rive_renderer_mod);
+    libjpeg.build(b, target, optimize, rive_mod);
     // }
 
     rive_renderer_lib.installHeadersDirectory(upstream.path("renderer/include"), "", .{ .include_extensions = &.{ ".h", ".hpp" } });

@@ -60,10 +60,10 @@
         //     .hash = "N-V-__8AAJ1n4BU4TdZhPiZ17cG_BV3j4Tgw43C2b1kse5fe",
         //     .lazy = true,
         // },
-        .libjpeg = .{
-            .url = "https://github.com/timsurber/libjpeg/archive/refs/heads/main.zip",
-            .hash = "libjpeg-9.6.0-amT3U_ERAAA98tsTqQud6cjW_qxb6r2trEls6qJosP2I",
-        },
+        // .libjpeg = .{
+        //     .url = "https://github.com/timsurber/libjpeg/archive/refs/heads/main.zip",
+        //     .hash = "libjpeg-9.6.0-amT3U_ERAAA98tsTqQud6cjW_qxb6r2trEls6qJosP2I",
+        // },
         .libpng = .{
             .url = "git+https://github.com/allyourcodebase/libpng#4783adcb3b8ed0e3d5032a3434059be594755f57",
             .hash = "libpng-1.6.53-oiaFGtwqAAB2XTxMgi4dG96BUO-0_BtUFtxKraIwq6-w",
@@ -75,6 +75,10 @@
         .sdl_linux_deps = .{
             .url = "git+https://github.com/castholm/SDL_linux_deps#fd349940b9dbaa0f221703b05df826d745d7ce2a",
             .hash = "sdl_linux_deps-0.0.0-SDL_ltg8hgAOayMwFN6BhHW3Rs5UPtf6n8m-2qcQHuGS",
+        },
+        .libjpeg = .{
+            .url = "https://github.com/rive-app/libjpeg/tarball/v9f",
+            .hash = "N-V-__8AAGj4RgDK9CUGtGo8KZkYNglCSjgu5NtDJJsoNJeZ",
         },
     },
 
