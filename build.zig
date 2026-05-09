@@ -88,7 +88,7 @@ pub fn build(b: *std.Build) !void {
 
     //********RIVE CORE**********
 
-    const rive_mod = b.addModule("rive_mod", .{
+    const rive_mod = b.createModule(.{
         .target = target,
         .optimize = optimize,
         .link_libcpp = true,
@@ -133,7 +133,7 @@ pub fn build(b: *std.Build) !void {
 
     //******RIVE RENDERER*******
 
-    const rive_renderer_mod = b.addModule("rive_renderer_mod", .{
+    const rive_renderer_mod = b.createModule(.{
         .target = target,
         .optimize = optimize,
         .link_libcpp = true,
