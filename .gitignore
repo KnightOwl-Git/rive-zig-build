@@ -2,22 +2,5 @@
 zig-out/
 *.o
 .DS_Store
-zig-pkg/libpng-1.6.53-oiaFGtwqAAB2XTxMgi4dG96BUO-0_BtUFtxKraIwq6-w
-zig-pkg/N-V-__8AAB0eQwD-0MdOEBmz7intriBReIsIDNlukNVoNu6o
-zig-pkg/N-V-__8AAB8MRQC7z9yHiE9h4hkpythIQIYO9BkbbEAO27AL
-zig-pkg/N-V-__8AAD63OgCRsCtozZ3AKD9eJ31jN38okB3nQSMU8Oa3
-zig-pkg/N-V-__8AAH6kCADCwVtPle9Dn5-H1bFPsR6r-yUhIzrvI1Af
-zig-pkg/N-V-__8AAHPqYAoPosyOJGKPgC_hBPd9l4PKwVRDNy4wpTHe
-zig-pkg/N-V-__8AAHsTAwB23khMfi2wOKr0T75w9lHgO5eG9OVwDR7p
-zig-pkg/N-V-__8AAI7-AQIsx0GGCNZVZDEQ-EhVjVd915WjwOOiSSA-
-zig-pkg/N-V-__8AAIutPgABk6NlXZhlJ5P8qVECvakZIKoO94h7xUOw
-zig-pkg/N-V-__8AAJHAsQD4olFtTzeo2TF4M57mK_1LiL_aWyT_6acO
-zig-pkg/N-V-__8AAJHgXwBPt17hQdF6ZmDlBAakhffuHGSNcE49WWzL
-zig-pkg/N-V-__8AAKEVFgGMrBjuxZ7669nPxcOc-dtUYqNhpsa355NL
-zig-pkg/N-V-__8AAKRr0wX-LmkhKHJpyevrbB7LtHGnuNjgmA7jALxo
-zig-pkg/N-V-__8AAM2VVgCwroTrKUeYZbuSyNUsEuNhnq9mpSwtGlm3
-zig-pkg/N-V-__8AANi8eADiw0ejg469Q_mXU5ubPV56A0b6-qnlXauz
-zig-pkg/N-V-__8AANupEwHXvbeQLcLdZQ3WXMgqkgR03hg8pV843VL0
-zig-pkg/sdl_linux_deps-0.0.0-SDL_ltg8hgAOayMwFN6BhHW3Rs5UPtf6n8m-2qcQHuGS
-zig-pkg/zlib-1.3.1-ZZQ7lc8NAABUbHzDe_cSWboCqMbrLkVwvFkKnojgeiT2
+zig-pkg/
 

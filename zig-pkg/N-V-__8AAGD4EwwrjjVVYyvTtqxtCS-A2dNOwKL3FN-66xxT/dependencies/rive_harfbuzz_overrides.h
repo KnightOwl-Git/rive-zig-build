@@ -1,1 +1,0 @@
-static char* getenv(const char* _) { return nullptr; }
