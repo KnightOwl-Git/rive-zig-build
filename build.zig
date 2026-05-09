@@ -35,12 +35,12 @@ pub fn build(b: *std.Build) !void {
         "Optimization mode (default is ReleaseSmall)",
     ) orelse .ReleaseSmall;
 
-    const glfw = b.dependency("glfw", .{
-        .target = target,
-        .optimize = optimize,
-    });
+    // const glfw = b.dependency("glfw", .{
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
 
-    const glfw_lib = glfw.artifact("glfw");
+    // const glfw_lib = glfw.artifact("glfw");
 
     const linuxDeps = b.dependency("sdl_linux_deps", .{});
 
@@ -322,7 +322,7 @@ pub fn build(b: *std.Build) !void {
         .link_libc = true,
     }) });
 
-    InstallArtifactFmt(path_fiddle);
+    // InstallArtifactFmt(path_fiddle);
 
     path_fiddle.bundle_ubsan_rt = true;
 
@@ -353,7 +353,9 @@ pub fn build(b: *std.Build) !void {
     path_fiddle.root_module.linkLibrary(rive_lib);
 
     path_fiddle.step.dependOn(&rive_renderer_lib.step);
-    path_fiddle.root_module.linkLibrary(glfw_lib);
+    //NOTE:Path fiddle is broken for now since I don't have a working glfw dependency at the moment
+
+    // path_fiddle.root_module.linkLibrary(glfw_lib);
 
     path_fiddle.root_module.addSystemIncludePath(linuxDeps.path("include"));
 

@@ -17,10 +17,10 @@
             .url = "git+https://github.com/dabeaz/ply.git#9d7c40099e23ff78f9d86ef69a26c1e8a83e706a",
             .hash = "N-V-__8AAH6kCADCwVtPle9Dn5-H1bFPsR6r-yUhIzrvI1Af",
         },
-        .glfw = .{
-            .url = "git+https://github.com/allyourcodebase/glfw.git#79e7ba3d082765954b59c4f11a2f9b4ff1ecb350",
-            .hash = "glfw-0.0.0-R5AeUo0JGgBvENV2Oz-u0V_unpWhEJTfK4qckBH5da6e",
-        },
+        // .glfw = .{
+        //     .url = "git+https://github.com/allyourcodebase/glfw.git#79e7ba3d082765954b59c4f11a2f9b4ff1ecb350",
+        //     .hash = "glfw-0.0.0-R5AeUo0JGgBvENV2Oz-u0V_unpWhEJTfK4qckBH5da6e",
+        // },
         .harfbuzz = .{
             .url = "https://github.com/rive-app/harfbuzz/tarball/rive_13.1.1",
             .hash = "N-V-__8AAKRr0wX-LmkhKHJpyevrbB7LtHGnuNjgmA7jALxo",

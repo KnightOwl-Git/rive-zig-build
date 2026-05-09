@@ -11,11 +11,11 @@
         "LICENSE.md",
     },
     .dependencies = .{
-        // .xcode_frameworks = .{
-        //     .url = "https://github.com/hexops/xcode-frameworks/archive/8a1cfb373587ea4c9bb1468b7c986462d8d4e10e.zip",
-        //     .hash = "N-V-__8AALShqgXkvqYU6f__FrA22SMWmi2TXCJjNTO1m8XJ",
-        //     .lazy = true,
-        // },
+        .xcode_frameworks = .{
+            .url = "https://github.com/hexops/xcode-frameworks/archive/8a1cfb373587ea4c9bb1468b7c986462d8d4e10e.zip",
+            .hash = "N-V-__8AALShqgXkvqYU6f__FrA22SMWmi2TXCJjNTO1m8XJ",
+            .lazy = true,
+        },
         .vulkan_headers = .{
             .url = "https://github.com/Batres3/vulkan-headers/archive/642b39a1f86f6f92ccdaaa52dc6106d59b7d92e2.zip",
             .hash = "N-V-__8AAKEVFgGMrBjuxZ7669nPxcOc-dtUYqNhpsa355NL",
