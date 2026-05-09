@@ -88,7 +88,7 @@ pub fn build(b: *std.Build) !void {
 
     //********RIVE CORE**********
 
-    const rive_mod = b.createModule(.{
+    const rive_mod = b.addModule("rive_mod", .{
         .target = target,
         .optimize = optimize,
         .link_libcpp = true,
@@ -133,12 +133,14 @@ pub fn build(b: *std.Build) !void {
 
     //******RIVE RENDERER*******
 
-    const rive_renderer_mod = b.createModule(.{
+    const rive_renderer_mod = b.addModule("rive_renderer_mod", .{
         .target = target,
         .optimize = optimize,
         .link_libcpp = true,
         .link_libc = true,
     });
+
+    //TODO:next, figure out how to merge the two libraries for easier use
 
     const rive_renderer_lib = b.addLibrary(.{
         .name = "rive_renderer",
