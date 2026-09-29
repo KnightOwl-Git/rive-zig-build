@@ -7,9 +7,9 @@
 
     .dependencies = .{
         .rive = .{
-            //last fetched 9/5/26
-            .url = "https://github.com/rive-app/rive-runtime/archive/refs/tags/runtime-v0.1.364.tar.gz",
-            .hash = "N-V-__8AAGodwBKEPViJfKjzHWwZOX64jHy5ZkoqCJ2IOTml",
+            //last fetched 9/28/26
+            .url = "https://github.com/rive-app/rive-runtime/archive/refs/tags/runtime-v0.1.477.tar.gz",
+            .hash = "N-V-__8AALFCbBF87uhTb-kWlEXfjJQcWFPRqyLT51b72yng",
         },
         //NOTE: python ply is no longer maintained - keep an eye out to see if Rive switches to something else
 
@@ -23,8 +23,8 @@
         },
 
         .yoga = .{
-            .url = "https://github.com/rive-app/yoga/archive/rive_changes_v2_0_1_2_grid.tar.gz",
-            .hash = "N-V-__8AAIlXXwAsyLMb8skfMM82JCz3i0C5JOlTXum1Hkwn",
+            .url = "https://github.com/rive-app/yoga/tarball/rive_changes_v2_0_1_4_grid",
+            .hash = "N-V-__8AAA5nXwB06p949xThdvAyoU2QcAYUh2xXIoAg08aL",
         },
         .sheenbidi = .{
             .url = "https://github.com/Tehreer/SheenBidi/archive/refs/tags/v2.6.tar.gz",
