@@ -2,7 +2,7 @@
     .name = .rive,
 
     .version = "0.1.335",
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.17.0",
     .fingerprint = 0xe3c90c03256b4441,
 
     .dependencies = .{
@@ -11,12 +11,12 @@
             .url = "https://github.com/rive-app/rive-runtime/archive/refs/tags/runtime-v0.1.477.tar.gz",
             .hash = "N-V-__8AALFCbBF87uhTb-kWlEXfjJQcWFPRqyLT51b72yng",
         },
-        //NOTE: python ply is no longer maintained - keep an eye out to see if Rive switches to something else
-
-        .python_ply = .{
-            .url = "git+https://github.com/dabeaz/ply.git#9d7c40099e23ff78f9d86ef69a26c1e8a83e706a",
-            .hash = "N-V-__8AAH6kCADCwVtPle9Dn5-H1bFPsR6r-yUhIzrvI1Af",
-        },
+        // //NOTE: python ply is no longer maintained - keep an eye out to see if Rive switches to something else
+        //
+        // .python_ply = .{
+        //     .url = "git+https://github.com/dabeaz/ply.git#9d7c40099e23ff78f9d86ef69a26c1e8a83e706a",
+        //     .hash = "N-V-__8AAH6kCADCwVtPle9Dn5-H1bFPsR6r-yUhIzrvI1Af",
+        // },
         .harfbuzz = .{
             .url = "https://github.com/rive-app/harfbuzz/tarball/rive_13.1.1",
             .hash = "N-V-__8AAKRr0wX-LmkhKHJpyevrbB7LtHGnuNjgmA7jALxo",
@@ -76,10 +76,10 @@
             .url = "https://github.com/rive-app/libjpeg/tarball/v9f",
             .hash = "N-V-__8AAGj4RgDK9CUGtGo8KZkYNglCSjgu5NtDJJsoNJeZ",
         },
-        .glfw = .{
-            .url = "git+https://github.com/zig-gamedev/zglfw#51003c105d23db378bb59ce415a387b22f1b0892",
-            .hash = "zglfw-0.10.0-dev-zgVDNIy4IQDJNRy4jrP1As-SZxfJpuWhU1iJ-wBab_VD",
-        },
+        // .glfw = .{
+        //     .url = "git+https://github.com/zig-gamedev/zglfw#51003c105d23db378bb59ce415a387b22f1b0892",
+        //     .hash = "zglfw-0.10.0-dev-zgVDNIy4IQDJNRy4jrP1As-SZxfJpuWhU1iJ-wBab_VD",
+        // },
         .bc7enc_rdo = .{
             .url = "git+https://github.com/richgel999/bc7enc_rdo#dbe416d28a5530b4e8cc45b14bf034dc6b96bbde",
             .hash = "N-V-__8AABeQbgKLULJ4dF965TihCQ06JWCBPbfaxAZfvsuh",

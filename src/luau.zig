@@ -20,7 +20,10 @@ pub fn build(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
     luau.root_module.addIncludePath(luau_upstream.path("VM/include"));
     luau.root_module.addIncludePath(luau_upstream.path("Common/include"));
 
-    luau.root_module.addCSourceFiles(try glob(b, .{ .root = luau_upstream.path("VM/src"), .allowed_exts = &.{".cpp"}, .recursive = true }));
+    const root: std.Build.Cache.Path = luau_upstream.builder.root;
+
+    std.debug.print("luau: {s}\n", .{root.sub_path});
+    luau.root_module.addCSourceFiles(try glob(b, .{ .root = luau_upstream.builder.root, .subpath = "VM/src", .allowed_exts = &.{".cpp"}, .recursive = true }));
     // luau.root_module.addCSourceFiles(try glob(b, .{ .root = luau_upstream.path("Compiler/src"), .allowed_exts = &.{".cpp"}, .recursive = true }));
     luau.root_module.addCSourceFiles(.{ .files = &.{"libhydrogen.c"}, .root = libHydrogen_upstream.path("") });
     //

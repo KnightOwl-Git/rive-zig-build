@@ -2,7 +2,8 @@ const std = @import("std");
 const Io = std.Io;
 
 pub const GlobOptions = struct {
-    root: std.Build.LazyPath,
+    root: std.Build.Cache.Path,
+    subpath: []const u8,
     allowed_exts: []const []const u8,
     recursive: bool = false,
     flags: []const []const u8 = &.{},
@@ -17,11 +18,9 @@ pub fn glob(b: *std.Build, options: GlobOptions) !std.Build.Module.AddCSourceFil
     var sources: std.ArrayList([]const u8) = .empty;
     const io = b.graph.io;
 
-    var dir = try Io.Dir.cwd().openDir(io, options.root.getPath(b), .{ .iterate = true });
+    var dir = try options.root.openDir(io, options.subpath, .{ .iterate = true });
 
     defer dir.close(io);
-
-    //see if we can not reuse so much code here
 
     if (options.recursive) {
         var walker = try dir.walk(b.allocator);
@@ -60,7 +59,9 @@ pub fn glob(b: *std.Build, options: GlobOptions) !std.Build.Module.AddCSourceFil
         }
     }
 
-    return .{ .files = sources.items, .root = options.root, .flags = options.flags, .language = options.language };
+    // std.debug.print("folder: {s}\n", .{options.root.root_dir});
+
+    return .{ .files = sources.items, .root = try b.path(options.root.root_dir.path.?).join(b.allocator, options.subpath), .flags = options.flags, .language = options.language };
 }
 
 ///Function to sort the install artifacts into folders for each platform

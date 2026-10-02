@@ -34,9 +34,8 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.option(
         std.builtin.OptimizeMode,
         "optimize",
-        "Optimization mode (default is ReleaseSmall)",
-    ) orelse .ReleaseSmall;
-
+        "Optimization mode (default is small)",
+    ) orelse .small;
     // const glfw = b.dependency("glfw", .{
     //     .target = target,
     //     .optimize = optimize,
@@ -44,14 +43,14 @@ pub fn build(b: *std.Build) !void {
 
     // const glfw_lib = glfw.artifact("glfw");
 
-    const linuxDeps = b.dependency("sdl_linux_deps", .{});
+    // const linuxDeps = b.dependency("sdl_linux_deps", .{});
 
     var windows = false;
     var linux = false;
     var macos = false;
-    var system_include_path: ?std.Build.LazyPath = null;
-    var system_framework_path: ?std.Build.LazyPath = null;
-    var library_path: ?std.Build.LazyPath = null;
+    // var system_include_path: ?std.Build.LazyPath = null;
+    // var system_framework_path: ?std.Build.LazyPath = null;
+    // var library_path: ?std.Build.LazyPath = null;
     switch (target.result.os.tag) {
         .windows => {
             windows = true;
@@ -62,18 +61,18 @@ pub fn build(b: *std.Build) !void {
         .macos => {
             macos = true;
 
-            //this code is taken from Castholm's SDL port
-            if (b.sysroot) |sysroot| {
-                system_include_path = .{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include" }) };
-                system_framework_path = .{ .cwd_relative = b.pathJoin(&.{ sysroot, "System/Library/Frameworks" }) };
-                library_path = .{ .cwd_relative = "/usr/lib" };
-                // glfw_lib.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include" }) });
-                // glfw_lib.addFrameworkPath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "System/Library/Frameworks" }) });
-                // glfw_lib.addLibraryPath(library_path.?);
-            } else if (!target.query.isNative()) {
-                std.log.err("'--sysroot' is required when building the Rive Renderer for non-native macOS targets. Use xcrun --show-sdk-path.", .{});
-                std.process.exit(1);
-            }
+            // //this code is taken from Castholm's SDL port
+            // if (b.sysroot) |sysroot| {
+            //     system_include_path = .{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include" }) };
+            //     system_framework_path = .{ .cwd_relative = b.pathJoin(&.{ sysroot, "System/Library/Frameworks" }) };
+            //     library_path = .{ .cwd_relative = "/usr/lib" };
+            //     // glfw_lib.addSystemIncludePath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "usr/include" }) });
+            //     // glfw_lib.addFrameworkPath(.{ .cwd_relative = b.pathJoin(&.{ sysroot, "System/Library/Frameworks" }) });
+            //     // glfw_lib.addLibraryPath(library_path.?);
+            // } else if (!target.query.isNative()) {
+            //     std.log.err("'--sysroot' is required when building the Rive Renderer for non-native macOS targets. Use xcrun --show-sdk-path.", .{});
+            //     std.process.exit(1);
+            // }
         },
         else => {},
     }
@@ -127,14 +126,15 @@ pub fn build(b: *std.Build) !void {
 
     //compile Rive source
     rive_mod.addCSourceFiles(try glob(b, .{
-        .root = upstream.path("src"),
+        .root = upstream.builder.root,
+        .subpath = "src",
         .allowed_exts = &.{".cpp"},
         .recursive = true,
         .exclude = &.{
             "lua_scripted_context.cpp",
             "lua_gpu.cpp",
         },
-        .flags = &.{"-fno-sanitize=pointer-overflow"}, //seems like this is necessary for text to work??
+        .flags = &.{ "-fno-sanitize=pointer-overflow", "" }, //seems like this is necessary for text to work??
     }));
     rive_mod.addCSourceFiles(.{ .files = &.{"no_op_factory.cpp"}, .root = upstream.path("utils") });
     // rive_mod.addCSourceFiles(.{ .files = &riveSource.rive_src, .root = upstream.path("src") });
@@ -157,13 +157,13 @@ pub fn build(b: *std.Build) !void {
         rive_mod.addCSourceFiles(.{
             .root = upstream.path("src/lua"),
             .files = &.{ "renderer/lua_gpu_apple.mm", "lua_scripted_context_apple.mm" },
-            // .flags = &.{ "-DRIVE_CANVAS", "-DRIVE_ORE" },
+            .flags = &.{""},
         });
     } else {
         rive_mod.addCSourceFiles(.{
             .root = upstream.path("src/lua"),
             .files = &.{ "renderer/lua_gpu.cpp", "lua_scripted_context.cpp" },
-            // .flags = &.{ "-DRIVE_CANVAS", "-DRIVE_ORE" },
+            .flags = &.{""},
         });
     }
 
@@ -196,9 +196,11 @@ pub fn build(b: *std.Build) !void {
 
     //build astc encoder
     rive_mod.addCSourceFiles(try glob(b, .{
-        .root = astc_encoder.path("source"),
+        .root = astc_encoder.builder.root,
+        .subpath = "source",
         .allowed_exts = &.{".cpp"},
         .prefix = "astcenc_",
+        .flags = &.{""},
     }));
 
     //build bc encoder
@@ -232,84 +234,122 @@ pub fn build(b: *std.Build) !void {
     rive_lib.installHeadersDirectory(upstream.path("renderer/glad/include"), "", .{});
     rive_lib.installHeadersDirectory(upstream.path("renderer/glad"), "", .{});
 
-    rive_mod.addCSourceFiles(try glob(b, .{ .root = upstream.path("renderer/src"), .allowed_exts = &.{".cpp"}, .flags = &.{"-std=c++20"} })); //Zig's Debug mode will panic if c++ standard isn't set to 20+ due to a negative bitwise shift operation
+    rive_mod.addCSourceFiles(try glob(b, .{ .root = upstream.builder.root, .subpath = "renderer/src", .allowed_exts = &.{".cpp"}, .flags = &.{
+        "-std=c++20",
+        "",
+    } })); //Zig's Debug mode will panic if c++ standard isn't set to 20+ due to a negative bitwise shift operation
     //make this optional along with the rest of the decoder stuff
-    rive_mod.addCSourceFiles(try glob(b, .{ .root = upstream.path("decoders/src"), .allowed_exts = &.{".cpp"} }));
+    rive_mod.addCSourceFiles(try glob(b, .{
+        .root = upstream.builder.root,
+        .subpath = "decoders/src",
+        .allowed_exts = &.{".cpp"},
+        .flags = &.{""},
+    }));
 
     rive_mod.addCSourceFiles(try glob(b, .{
-        .root = upstream.path("renderer/src/ore"),
+        .root = upstream.builder.root,
+        .subpath = "renderer/src/ore",
         .allowed_exts = &.{".cpp"},
+        .flags = &.{""},
     }));
     rive_mod.addCSourceFiles(try glob(b, .{
-        .root = upstream.path("renderer/src/ore/gl"),
+        .root = upstream.builder.root,
+        .subpath = "renderer/src/ore/gl",
         .allowed_exts = &.{".cpp"},
+        .flags = &.{""},
     }));
 
     if (macos) {
         rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/metal"),
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/metal",
             .allowed_exts = &.{".mm"},
+            .flags = &.{""},
         }));
         rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/ore/metal"),
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/ore/metal",
             .allowed_exts = &.{".mm"},
+            .flags = &.{""},
         }));
 
         rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/ore/gl"),
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/ore/gl",
             .allowed_exts = &.{".mm"},
+            .flags = &.{""},
         }));
     } else if (windows) {
         rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/vulkan"),
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/vulkan",
+            .allowed_exts = &.{".cpp"},
+            .flags = &.{""},
+        }));
+
+        rive_mod.addCSourceFiles(try glob(b, .{
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/ore/vulkan",
+            .allowed_exts = &.{".cpp"},
+            .flags = &.{""},
+        }));
+
+        rive_mod.addCSourceFiles(try glob(b, .{
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/d3d",
+            .allowed_exts = &.{".cpp"},
+            .flags = &.{""},
+        }));
+
+        rive_mod.addCSourceFiles(try glob(b, .{
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/d3d11",
+            .allowed_exts = &.{".cpp"},
+            .flags = &.{""},
+        }));
+
+        rive_mod.addCSourceFiles(try glob(b, .{
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/ore/d3d11",
+            .flags = &.{""},
             .allowed_exts = &.{".cpp"},
         }));
 
         rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/ore/vulkan"),
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/d3d12",
             .allowed_exts = &.{".cpp"},
+            .flags = &.{""},
         }));
 
         rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/d3d"),
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/ore/d3d12",
             .allowed_exts = &.{".cpp"},
-        }));
-
-        rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/d3d11"),
-            .allowed_exts = &.{".cpp"},
-        }));
-
-        rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/ore/d3d11"),
-            .allowed_exts = &.{".cpp"},
-        }));
-
-        rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/d3d12"),
-            .allowed_exts = &.{".cpp"},
-        }));
-
-        rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/ore/d3d12"),
-            .allowed_exts = &.{".cpp"},
+            .flags = &.{""},
         }));
 
         //TODO: Add ORE if rive canvas enabled
     } else if (linux) {
         rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/vulkan"),
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/vulkan",
             .allowed_exts = &.{".cpp"},
+            .flags = &.{""},
         }));
 
         rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/src/ore/vulkan"),
+            .root = upstream.builder.root,
+            .subpath = "renderer/src/ore/vulkan",
             .allowed_exts = &.{".cpp"},
+            .flags = &.{""},
         }));
 
         rive_mod.addCSourceFiles(try glob(b, .{
-            .root = upstream.path("renderer/rive_vk_bootstrap/src"),
+            .root = upstream.builder.root,
+            .subpath = "renderer/rive_vk_bootstrap/src",
             .allowed_exts = &.{".cpp"},
+            .flags = &.{""},
         }));
 
         rive_mod.addCMacro("RIVE_VULKAN", "");
@@ -323,32 +363,36 @@ pub fn build(b: *std.Build) !void {
         rive_mod.addIncludePath(upstream.path("renderer/shader_hotload"));
         rive_mod.addCSourceFile(.{ .file = upstream.path("renderer/shader_hotload/shader_hotload.cpp") });
     }
-    rive_mod.addCSourceFiles(.{ .root = upstream.path("renderer"), .files = &.{
-        "src/gl/gl_state.cpp",
-        "src/gl/gl_utils.cpp",
-        "src/gl/load_store_actions_ext.cpp",
-        "src/gl/render_buffer_gl_impl.cpp",
-        "src/gl/render_context_gl_impl.cpp",
-        "src/gl/render_target_gl.cpp",
-        "src/gl/pls_impl_webgl.cpp",
-        "src/gl/pls_impl_rw_texture.cpp",
-        "glad/src/egl.c",
-        "glad/src/gles2.c",
-        "glad/glad_custom.c",
-    } });
+    rive_mod.addCSourceFiles(.{
+        .root = upstream.path("renderer"),
+        .files = &.{
+            "src/gl/gl_state.cpp",
+            "src/gl/gl_utils.cpp",
+            "src/gl/load_store_actions_ext.cpp",
+            "src/gl/render_buffer_gl_impl.cpp",
+            "src/gl/render_context_gl_impl.cpp",
+            "src/gl/render_target_gl.cpp",
+            "src/gl/pls_impl_webgl.cpp",
+            "src/gl/pls_impl_rw_texture.cpp",
+            "glad/src/egl.c",
+            "glad/src/gles2.c",
+            "glad/glad_custom.c",
+        },
+        .flags = &.{""},
+    });
 
     // platform specific links
 
-    if (system_include_path) |path| {
-        rive_mod.addSystemIncludePath(path);
-    }
+    // if (system_include_path) |path| {
+    //     rive_mod.addSystemIncludePath(path);
+    // }
 
-    if (system_framework_path) |path| {
-        rive_mod.addSystemFrameworkPath(path);
-    }
-    if (library_path) |path| {
-        rive_mod.addLibraryPath(path);
-    }
+    // if (system_framework_path) |path| {
+    //     rive_mod.addSystemFrameworkPath(path);
+    // }
+    // if (library_path) |path| {
+    //     rive_mod.addLibraryPath(path);
+    // }
 
     rive_mod.addCMacro("RIVE_ORE", ""); // this is for rive's GPU canvas. Make this optional, and also decouple it from target
 
@@ -379,21 +423,24 @@ pub fn build(b: *std.Build) !void {
 
     const make_cmd = b.addSystemCommand(&.{"make"});
 
-    const ply_dep = b.dependency("python_ply", .{});
-    const ply_path = ply_dep.path("src");
-    const ply_path_resolved = ply_path.getPath(b);
-    const shaders_dir = upstream.path("renderer/src/shaders");
+    //TODO: Don't require the user to download python ply themselves, this is a regression from 0.16
 
-    const shaders_dir_resolved = shaders_dir.getPath(b);
+    // const ply_dep = b.dependency("python_ply", .{});
+    // const ply_root: std.Build.Cache.Path = ply_dep.builder.root;
+    const shaders_dir = upstream.path("renderer/src/shaders");
 
     const pls_generated_headers = b.path("zig-out/include/generated/shaders");
 
-    make_cmd.setEnvironmentVariable("PYTHONPATH", ply_path_resolved);
+    // const string = try std.mem.concat(b.allocator, u8, &.{ "./", try ply_root.toString(b.allocator), "/src" });
+    //
+    // std.debug.print("pythonpathhhhh: {s}\n", .{string});
+    //
+    // make_cmd.setEnvironmentVariable("PYTHONPATH", string);
 
     //construct the make command
 
     make_cmd.addArg("-C");
-    make_cmd.addArg(shaders_dir_resolved);
+    make_cmd.addDirectoryArg(shaders_dir);
 
     const nproc = std.Thread.getCpuCount() catch 1;
     make_cmd.addArg(b.fmt("-j{d}", .{nproc}));
@@ -412,75 +459,77 @@ pub fn build(b: *std.Build) !void {
     rive_lib.step.dependOn(&make_cmd.step);
     rive_mod.addIncludePath(b.path("zig-out/include"));
 
-    // *****PATH FIDDLE*******
+    // *****PATH FIDDLE******* turning off for now since glfw isn't updated
 
-    const glfw = b.dependency("glfw", .{
-        .target = target,
-        .optimize = optimize,
-    });
-
-    //Note: in order to build the Path Fiddle demo project on Linux, you must have OpenGL dev tools installed even though it will use vulkan by default (i.e. libGL-mesa-dev or equivalent)
-    const path_fiddle = b.addExecutable(.{ .name = "path_fiddle", .root_module = b.createModule(.{
-        .target = target,
-        .optimize = optimize,
-        .link_libcpp = true,
-        .link_libc = true,
-    }) });
-
-    InstallArtifactFmt(path_fiddle);
-
-    path_fiddle.bundle_ubsan_rt = true;
-
-    path_fiddle.root_module.addCSourceFiles(.{
-        .files = &.{ "path_fiddle.cpp", "fiddle_context_gl.cpp", "fiddle_context_vulkan.cpp", "fiddle_context_dawn.cpp", "fiddle_context_d3d.cpp", "fiddle_context_d3d12.cpp", "fiddle_context.cpp" },
-        .root = upstream.path("renderer/path_fiddle"),
-    });
-
-    if (macos) {
-        path_fiddle.root_module.addCSourceFiles(.{
-            .files = &.{"fiddle_context_metal.mm"},
-            .flags = &.{"-fobjc-arc"},
-            .root = upstream.path("renderer/path_fiddle"),
-        });
-    }
-    if (linux) {
-        path_fiddle.root_module.addCMacro("RIVE_VULKAN", "");
-        // path_fiddle.root_module.addIncludePath(vulkan_headers.path("include"));
-        // path_fiddle.root_module.addIncludePath(vulkan_memory_allocator.path("include"));
-        path_fiddle.root_module.addIncludePath(upstream.path("renderer/rive_vk_bootstrap/include"));
-        path_fiddle.root_module.addIncludePath(upstream.path("renderer/shader_hotload"));
-
-        // path_fiddle.root_module.linkSystemLibrary("GL", .{});
-        // const opengl_headers = b.lazyDependency("mesa", .{}).?.path("include");
-        // path_fiddle.root_module.addIncludePath(opengl_headers);
-    }
-    path_fiddle.root_module.linkLibrary(rive_lib);
-
-    path_fiddle.step.dependOn(&rive_lib.step);
-
-    path_fiddle.root_module.linkLibrary(glfw.artifact("glfw"));
-
-    path_fiddle.root_module.addSystemIncludePath(linuxDeps.path("include"));
-
-    if (system_framework_path) |path| {
-        path_fiddle.root_module.addSystemFrameworkPath(path);
-    }
-
-    path_fiddle.root_module.addCMacro("RIVE_DESKTOP_GL", "");
-    path_fiddle.root_module.addCMacro("RIVE_CANVAS", "");
-    path_fiddle.root_module.addCMacro("RIVE_ORE", "");
-
-    if (macos) {
-        path_fiddle.root_module.addCMacro("RIVE_MACOSX", "");
-        path_fiddle.root_module.linkFramework("Metal", .{});
-        path_fiddle.root_module.linkFramework("QuartzCore", .{});
-        path_fiddle.root_module.linkFramework("Cocoa", .{});
-        path_fiddle.root_module.linkFramework("IOKit", .{});
-        path_fiddle.root_module.linkSystemLibrary("objc", .{});
-    }
-
-    const run_exe = b.addRunArtifact(path_fiddle);
-    const run_step = b.step("run", "Run Path Fiddle");
-
-    run_step.dependOn(&run_exe.step);
+    // const glfw = b.dependency("glfw", .{
+    //     .target = target,
+    //     .optimize = optimize,
+    // });
+    //
+    // //Note: in order to build the Path Fiddle demo project on Linux, you must have OpenGL dev tools installed even though it will use vulkan by default (i.e. libGL-mesa-dev or equivalent)
+    // const path_fiddle = b.addExecutable(.{ .name = "path_fiddle", .root_module = b.createModule(.{
+    //     .target = target,
+    //     .optimize = optimize,
+    //     .link_libcpp = true,
+    //     .link_libc = true,
+    // }) });
+    //
+    // InstallArtifactFmt(path_fiddle);
+    //
+    // path_fiddle.bundle_ubsan_rt = true;
+    //
+    // path_fiddle.root_module.addCSourceFiles(.{
+    //     .files = &.{ "path_fiddle.cpp", "fiddle_context_gl.cpp", "fiddle_context_vulkan.cpp", "fiddle_context_dawn.cpp", "fiddle_context_d3d.cpp", "fiddle_context_d3d12.cpp", "fiddle_context.cpp" },
+    //     .root = upstream.path("renderer/path_fiddle"),
+    //
+    //     .flags = &.{""},
+    // });
+    //
+    // if (macos) {
+    //     path_fiddle.root_module.addCSourceFiles(.{
+    //         .files = &.{"fiddle_context_metal.mm"},
+    //         .flags = &.{ "-fobjc-arc", "" },
+    //         .root = upstream.path("renderer/path_fiddle"),
+    //     });
+    // }
+    // if (linux) {
+    //     path_fiddle.root_module.addCMacro("RIVE_VULKAN", "");
+    //     // path_fiddle.root_module.addIncludePath(vulkan_headers.path("include"));
+    //     // path_fiddle.root_module.addIncludePath(vulkan_memory_allocator.path("include"));
+    //     path_fiddle.root_module.addIncludePath(upstream.path("renderer/rive_vk_bootstrap/include"));
+    //     path_fiddle.root_module.addIncludePath(upstream.path("renderer/shader_hotload"));
+    //
+    //     // path_fiddle.root_module.linkSystemLibrary("GL", .{});
+    //     // const opengl_headers = b.lazyDependency("mesa", .{}).?.path("include");
+    //     // path_fiddle.root_module.addIncludePath(opengl_headers);
+    // }
+    // path_fiddle.root_module.linkLibrary(rive_lib);
+    //
+    // path_fiddle.step.dependOn(&rive_lib.step);
+    //
+    // path_fiddle.root_module.linkLibrary(glfw.artifact("glfw"));
+    //
+    // path_fiddle.root_module.addSystemIncludePath(linuxDeps.path("include"));
+    //
+    // // if (system_framework_path) |path| {
+    // //     path_fiddle.root_module.addSystemFrameworkPath(path);
+    // // }
+    //
+    // path_fiddle.root_module.addCMacro("RIVE_DESKTOP_GL", "");
+    // path_fiddle.root_module.addCMacro("RIVE_CANVAS", "");
+    // path_fiddle.root_module.addCMacro("RIVE_ORE", "");
+    //
+    // if (macos) {
+    //     path_fiddle.root_module.addCMacro("RIVE_MACOSX", "");
+    //     path_fiddle.root_module.linkFramework("Metal", .{});
+    //     path_fiddle.root_module.linkFramework("QuartzCore", .{});
+    //     path_fiddle.root_module.linkFramework("Cocoa", .{});
+    //     path_fiddle.root_module.linkFramework("IOKit", .{});
+    //     path_fiddle.root_module.linkSystemLibrary("objc", .{});
+    // }
+    //
+    // const run_exe = b.addRunArtifact(path_fiddle);
+    // const run_step = b.step("run", "Run Path Fiddle");
+    //
+    // run_step.dependOn(&run_exe.step);
 }
