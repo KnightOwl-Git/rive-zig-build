@@ -76,10 +76,7 @@
             .url = "https://github.com/rive-app/libjpeg/tarball/v9f",
             .hash = "N-V-__8AAGj4RgDK9CUGtGo8KZkYNglCSjgu5NtDJJsoNJeZ",
         },
-        // .glfw = .{
-        //     .url = "git+https://github.com/zig-gamedev/zglfw#51003c105d23db378bb59ce415a387b22f1b0892",
-        //     .hash = "zglfw-0.10.0-dev-zgVDNIy4IQDJNRy4jrP1As-SZxfJpuWhU1iJ-wBab_VD",
-        // },
+
         .bc7enc_rdo = .{
             .url = "git+https://github.com/richgel999/bc7enc_rdo#dbe416d28a5530b4e8cc45b14bf034dc6b96bbde",
             .hash = "N-V-__8AABeQbgKLULJ4dF965TihCQ06JWCBPbfaxAZfvsuh",
@@ -91,6 +88,10 @@
         .astc_encoder = .{
             .url = "https://github.com/ARM-software/astc-encoder/archive/refs/tags/4.7.0.tar.gz",
             .hash = "N-V-__8AAOnrkgKqdIqNfzLoe6HXUAiXt03yXSJSwthCo-Sg",
+        },
+        .glfw_zig = .{
+            .url = "git+https://github.com/tiawl/glfw.zig#5c0f5fcf703152c7e0bc1c870fa0cbaa53d159ea",
+            .hash = "glfw_zig-1.0.0-NrvYoxInGgCd0xJ5a4UL2mi9q77pmpwTIwSZ4Tlm4ylz",
         },
     },
 

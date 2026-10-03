@@ -178,6 +178,8 @@ pub fn build(b: *std.Build) !void {
     rive_mod.addCMacro("ORE_BACKEND_GL", ""); // this is for rive's GPU canvas
     // Set the include path
 
+    b.dependOnDirectoryContents(upstream.path("src"));
+
     //compile Rive Renderer
 
     const dx12_headers = b.dependency("directX", .{});
@@ -239,6 +241,8 @@ pub fn build(b: *std.Build) !void {
         "",
     } })); //Zig's Debug mode will panic if c++ standard isn't set to 20+ due to a negative bitwise shift operation
     //make this optional along with the rest of the decoder stuff
+
+    b.dependOnDirectoryContents(upstream.path("renderer/src"));
     rive_mod.addCSourceFiles(try glob(b, .{
         .root = upstream.builder.root,
         .subpath = "decoders/src",
@@ -461,75 +465,75 @@ pub fn build(b: *std.Build) !void {
 
     // *****PATH FIDDLE******* turning off for now since glfw isn't updated
 
-    // const glfw = b.dependency("glfw", .{
-    //     .target = target,
-    //     .optimize = optimize,
-    // });
-    //
-    // //Note: in order to build the Path Fiddle demo project on Linux, you must have OpenGL dev tools installed even though it will use vulkan by default (i.e. libGL-mesa-dev or equivalent)
-    // const path_fiddle = b.addExecutable(.{ .name = "path_fiddle", .root_module = b.createModule(.{
-    //     .target = target,
-    //     .optimize = optimize,
-    //     .link_libcpp = true,
-    //     .link_libc = true,
-    // }) });
-    //
-    // InstallArtifactFmt(path_fiddle);
-    //
-    // path_fiddle.bundle_ubsan_rt = true;
-    //
-    // path_fiddle.root_module.addCSourceFiles(.{
-    //     .files = &.{ "path_fiddle.cpp", "fiddle_context_gl.cpp", "fiddle_context_vulkan.cpp", "fiddle_context_dawn.cpp", "fiddle_context_d3d.cpp", "fiddle_context_d3d12.cpp", "fiddle_context.cpp" },
-    //     .root = upstream.path("renderer/path_fiddle"),
-    //
-    //     .flags = &.{""},
-    // });
-    //
-    // if (macos) {
-    //     path_fiddle.root_module.addCSourceFiles(.{
-    //         .files = &.{"fiddle_context_metal.mm"},
-    //         .flags = &.{ "-fobjc-arc", "" },
-    //         .root = upstream.path("renderer/path_fiddle"),
-    //     });
-    // }
-    // if (linux) {
-    //     path_fiddle.root_module.addCMacro("RIVE_VULKAN", "");
-    //     // path_fiddle.root_module.addIncludePath(vulkan_headers.path("include"));
-    //     // path_fiddle.root_module.addIncludePath(vulkan_memory_allocator.path("include"));
-    //     path_fiddle.root_module.addIncludePath(upstream.path("renderer/rive_vk_bootstrap/include"));
-    //     path_fiddle.root_module.addIncludePath(upstream.path("renderer/shader_hotload"));
-    //
-    //     // path_fiddle.root_module.linkSystemLibrary("GL", .{});
-    //     // const opengl_headers = b.lazyDependency("mesa", .{}).?.path("include");
-    //     // path_fiddle.root_module.addIncludePath(opengl_headers);
-    // }
-    // path_fiddle.root_module.linkLibrary(rive_lib);
-    //
-    // path_fiddle.step.dependOn(&rive_lib.step);
-    //
-    // path_fiddle.root_module.linkLibrary(glfw.artifact("glfw"));
-    //
+    const glfw = b.dependency("glfw_zig", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
+    //Note: in order to build the Path Fiddle demo project on Linux, you must have OpenGL dev tools installed even though it will use vulkan by default (i.e. libGL-mesa-dev or equivalent)
+    const path_fiddle = b.addExecutable(.{ .name = "path_fiddle", .root_module = b.createModule(.{
+        .target = target,
+        .optimize = optimize,
+        .link_libcpp = true,
+        .link_libc = true,
+    }) });
+
+    InstallArtifactFmt(path_fiddle);
+
+    path_fiddle.bundle_ubsan_rt = true;
+
+    path_fiddle.root_module.addCSourceFiles(.{
+        .files = &.{ "path_fiddle.cpp", "fiddle_context_gl.cpp", "fiddle_context_vulkan.cpp", "fiddle_context_dawn.cpp", "fiddle_context_d3d.cpp", "fiddle_context_d3d12.cpp", "fiddle_context.cpp" },
+        .root = upstream.path("renderer/path_fiddle"),
+
+        .flags = &.{""},
+    });
+
+    if (macos) {
+        path_fiddle.root_module.addCSourceFiles(.{
+            .files = &.{"fiddle_context_metal.mm"},
+            .flags = &.{ "-fobjc-arc", "" },
+            .root = upstream.path("renderer/path_fiddle"),
+        });
+    }
+    if (linux) {
+        path_fiddle.root_module.addCMacro("RIVE_VULKAN", "");
+        // path_fiddle.root_module.addIncludePath(vulkan_headers.path("include"));
+        // path_fiddle.root_module.addIncludePath(vulkan_memory_allocator.path("include"));
+        path_fiddle.root_module.addIncludePath(upstream.path("renderer/rive_vk_bootstrap/include"));
+        path_fiddle.root_module.addIncludePath(upstream.path("renderer/shader_hotload"));
+
+        // path_fiddle.root_module.linkSystemLibrary("GL", .{});
+        // const opengl_headers = b.lazyDependency("mesa", .{}).?.path("include");
+        // path_fiddle.root_module.addIncludePath(opengl_headers);
+    }
+    path_fiddle.root_module.linkLibrary(rive_lib);
+
+    path_fiddle.step.dependOn(&rive_lib.step);
+
+    path_fiddle.root_module.linkLibrary(glfw.artifact("glfw"));
+
     // path_fiddle.root_module.addSystemIncludePath(linuxDeps.path("include"));
-    //
-    // // if (system_framework_path) |path| {
-    // //     path_fiddle.root_module.addSystemFrameworkPath(path);
-    // // }
-    //
-    // path_fiddle.root_module.addCMacro("RIVE_DESKTOP_GL", "");
-    // path_fiddle.root_module.addCMacro("RIVE_CANVAS", "");
-    // path_fiddle.root_module.addCMacro("RIVE_ORE", "");
-    //
-    // if (macos) {
-    //     path_fiddle.root_module.addCMacro("RIVE_MACOSX", "");
-    //     path_fiddle.root_module.linkFramework("Metal", .{});
-    //     path_fiddle.root_module.linkFramework("QuartzCore", .{});
-    //     path_fiddle.root_module.linkFramework("Cocoa", .{});
-    //     path_fiddle.root_module.linkFramework("IOKit", .{});
-    //     path_fiddle.root_module.linkSystemLibrary("objc", .{});
+
+    // if (system_framework_path) |path| {
+    //     path_fiddle.root_module.addSystemFrameworkPath(path);
     // }
-    //
-    // const run_exe = b.addRunArtifact(path_fiddle);
-    // const run_step = b.step("run", "Run Path Fiddle");
-    //
-    // run_step.dependOn(&run_exe.step);
+
+    path_fiddle.root_module.addCMacro("RIVE_DESKTOP_GL", "");
+    path_fiddle.root_module.addCMacro("RIVE_CANVAS", "");
+    path_fiddle.root_module.addCMacro("RIVE_ORE", "");
+
+    if (macos) {
+        path_fiddle.root_module.addCMacro("RIVE_MACOSX", "");
+        path_fiddle.root_module.linkFramework("Metal", .{});
+        path_fiddle.root_module.linkFramework("QuartzCore", .{});
+        path_fiddle.root_module.linkFramework("Cocoa", .{});
+        path_fiddle.root_module.linkFramework("IOKit", .{});
+        path_fiddle.root_module.linkSystemLibrary("objc", .{});
+    }
+
+    const run_exe = b.addRunArtifact(path_fiddle);
+    const run_step = b.step("run", "Run Path Fiddle");
+
+    run_step.dependOn(&run_exe.step);
 }
